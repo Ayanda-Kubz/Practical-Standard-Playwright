@@ -237,7 +237,7 @@ public class PlaywrightStandardTest {
         page.locator("[data-test=\"continue\"]").click();
         assertThat(page.locator("[data-test=\"error\"]")).containsText("Error: First Name is required");
         takeScreenshot("Error: First Name is required",folderPath);
-        test.fail("Error: First Name is required");
+        test.pass("Error: First Name is required");
 
     }
     public void checkOutFormLastNameValidation(){
@@ -249,7 +249,7 @@ public class PlaywrightStandardTest {
         page.locator("[data-test=\"continue\"]").click();
         assertThat(page.locator("[data-test=\"error\"]")).containsText("Error: Last Name is required");
         takeScreenshot("Error: Last Name is required",folderPath);
-        test.fail("Error: Last Name is required");
+        test.pass("Error: Last Name is required");
     }
     public void checkOutFormZipCodeValidation(){
 
@@ -260,7 +260,7 @@ public class PlaywrightStandardTest {
         page.locator("[data-test=\"continue\"]").click();
         assertThat(page.locator("[data-test=\"error\"]")).containsText("Error: Postal Code is required");
         takeScreenshot("Error: Postal Code is required",folderPath);
-        test.fail("Error: Postal Code is required");
+        test.pass("Error: Postal Code is required");
     }
     public void checkOutFormInputValidation(){
 
