@@ -54,24 +54,4 @@ public class ConfigReader {
         }
         return folderPath;
     }
-
-    public Stream<Arguments> csvDataProvider() throws Exception {
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(Objects.requireNonNull(ConfigReader.class.getResourceAsStream
-                        ("/test-data.csv"))))) {
-
-            String headerLine = reader.readLine(); // first line = headers
-            String[] headers = headerLine.split(",");
-
-            return reader.lines()
-                    .map(line -> {
-                        String[] values = line.split(",");
-                        Map<String, String> row = new HashMap<>();
-                        for (int i = 0; i < headers.length; i++) {
-                            row.put(headers[i], values[i]);
-                        }
-                        return Arguments.of(row);
-                    });
-        }
-    }
 }
