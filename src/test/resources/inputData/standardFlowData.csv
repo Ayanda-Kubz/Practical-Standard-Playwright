@@ -1,2 +1,2 @@
-test_id,username,password,firstName,lastName,zipCode
-1,standard_user,secret_sauce,John,Doe,2001
+test_id,firstName,lastName,zipCode
+1,John,Doe,2001

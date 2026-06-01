@@ -27,6 +27,7 @@ public class PlaywrightStandardTest {
     ExtentTest test;
     ExtentReports extent;
     List<Map<String, String>> rows;
+    Properties config;
 
     @BeforeEach
     public void setupBrowser(TestInfo testInfo) throws IOException {
@@ -37,7 +38,9 @@ public class PlaywrightStandardTest {
                 .setHeadless(false));
         context = browser.newContext();
         page = context.newPage();
-        Properties config = ConfigReader.loadProperties();
+
+        //initialize Properties file
+        config = ConfigReader.loadProperties();
 
         // Get values from config file
         String baseUrl = config.getProperty("base.url");
@@ -92,6 +95,12 @@ public class PlaywrightStandardTest {
     }
 
     @Test
+    public void testIncorrectUserDetails() throws IOException {
+        csvFormat("loginErrorData.csv");
+        incorrectUserLogin();
+    }
+
+    @Test
     public void testCancelCheckout() throws IOException {
         csvFormat("standardFlowData.csv");
         userLogin();
@@ -130,13 +139,14 @@ public class PlaywrightStandardTest {
         extent.flush();
     }
 
-    public void userLogin() {
+    public void userLogin() throws IOException {
 
-
+        // Get values from config file
         page.locator("[data-test=\"username\"]").click();
-        page.locator("[data-test=\"username\"]").fill(rows.get(0).get("username"));
+        page.locator("[data-test=\"username\"]").fill(config.getProperty("standard_username"));
         page.locator("[data-test=\"password\"]").click();
-        page.locator("[data-test=\"password\"]").fill(rows.get(0).get("password"));
+        page.locator("[data-test=\"password\"]").fill(config.getProperty("standard_password"));
+        takeScreenshot("Successfully entered login details",folderPath);
         page.locator("[data-test=\"login-button\"]").click();
         takeScreenshot("Successfully Logged In",folderPath);
 
@@ -191,9 +201,21 @@ public class PlaywrightStandardTest {
     public void lockedOutUserLogin(){
 
         page.locator("[data-test=\"username\"]").click();
-        page.locator("[data-test=\"username\"]").fill(rows.get(0).get("username"));
+        page.locator("[data-test=\"username\"]").fill(config.getProperty("locked_username"));
         page.locator("[data-test=\"password\"]").click();
-        page.locator("[data-test=\"password\"]").fill(rows.get(0).get("password"));
+        page.locator("[data-test=\"password\"]").fill(config.getProperty("locked_password"));
+        page.locator("[data-test=\"login-button\"]").click();
+        page.locator("[data-test=\"error\"]").first().innerText();
+        System.out.println(page.locator("[data-test=\"error\"]").first().innerText());
+        takeScreenshot("User Login Error Message Displayed",folderPath);
+        test.pass("User Login Error Message Displayed");
+    }
+    public void incorrectUserLogin(){
+
+        page.locator("[data-test=\"username\"]").click();
+        page.locator("[data-test=\"username\"]").fill(config.getProperty("incorrect_username"));
+        page.locator("[data-test=\"password\"]").click();
+        page.locator("[data-test=\"password\"]").fill(config.getProperty("incorrect_password"));
         page.locator("[data-test=\"login-button\"]").click();
         page.locator("[data-test=\"error\"]").first().innerText();
         System.out.println(page.locator("[data-test=\"error\"]").first().innerText());
