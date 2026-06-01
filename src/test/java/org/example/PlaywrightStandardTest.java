@@ -27,6 +27,7 @@ public class PlaywrightStandardTest {
     ExtentTest test;
     ExtentReports extent;
     List<Map<String, String>> rows;
+    Properties config;
 
     @BeforeEach
     public void setupBrowser(TestInfo testInfo) throws IOException {
@@ -37,7 +38,9 @@ public class PlaywrightStandardTest {
                 .setHeadless(false));
         context = browser.newContext();
         page = context.newPage();
-        Properties config = ConfigReader.loadProperties();
+
+        //initialize Properties file
+        config = ConfigReader.loadProperties();
 
         // Get values from config file
         String baseUrl = config.getProperty("base.url");
@@ -66,7 +69,8 @@ public class PlaywrightStandardTest {
     }
 
     @Test
-    public void testStandardFlow(){
+    public void testStandardFlow() throws IOException {
+        csvFormat("standardFlowData.csv");
         userLogin();
         addProductsToCart();
         fillCustomerInfo();
@@ -76,7 +80,8 @@ public class PlaywrightStandardTest {
     }
 
     @Test
-    public void testDifferentFilters() {
+    public void testDifferentFilters() throws IOException {
+        csvFormat("standardFlowData.csv");
         userLogin();
         filtersAvailable();
         logOut();
@@ -90,7 +95,14 @@ public class PlaywrightStandardTest {
     }
 
     @Test
-    public void testCancelCheckout(){
+    public void testIncorrectUserDetails() throws IOException {
+        csvFormat("loginErrorData.csv");
+        incorrectUserLogin();
+    }
+
+    @Test
+    public void testCancelCheckout() throws IOException {
+        csvFormat("standardFlowData.csv");
         userLogin();
         addProductsToCart();
         fillCustomerInfo();
@@ -99,8 +111,8 @@ public class PlaywrightStandardTest {
     }
 
     @Test
-
-    public void testInputValidation(){
+    public void testInputValidation() throws IOException {
+        csvFormat("inputValidationData.csv");
         userLogin();
         addProductsToCart();
         //test for empty firstName
@@ -127,13 +139,14 @@ public class PlaywrightStandardTest {
         extent.flush();
     }
 
-    public void userLogin() {
+    public void userLogin() throws IOException {
 
-
+        // Get values from config file
         page.locator("[data-test=\"username\"]").click();
-        page.locator("[data-test=\"username\"]").fill("standard_user");
+        page.locator("[data-test=\"username\"]").fill(config.getProperty("standard_username"));
         page.locator("[data-test=\"password\"]").click();
-        page.locator("[data-test=\"password\"]").fill("secret_sauce");
+        page.locator("[data-test=\"password\"]").fill(config.getProperty("standard_password"));
+        takeScreenshot("Successfully entered login details",folderPath);
         page.locator("[data-test=\"login-button\"]").click();
         takeScreenshot("Successfully Logged In",folderPath);
 
@@ -156,11 +169,11 @@ public class PlaywrightStandardTest {
 
     public void fillCustomerInfo(){
         page.locator("[data-test=\"firstName\"]").click();
-        page.locator("[data-test=\"firstName\"]").fill("John");
+        page.locator("[data-test=\"firstName\"]").fill(rows.get(0).get("firstName"));
         page.locator("[data-test=\"lastName\"]").click();
-        page.locator("[data-test=\"lastName\"]").fill("Doe");
+        page.locator("[data-test=\"lastName\"]").fill(rows.get(0).get("lastName"));
         page.locator("[data-test=\"postalCode\"]").click();
-        page.locator("[data-test=\"postalCode\"]").fill("2001");
+        page.locator("[data-test=\"postalCode\"]").fill(rows.get(0).get("zipCode"));
         takeScreenshot("All customer information added",folderPath);
         page.locator("[data-test=\"continue\"]").click();
         test.pass("All customer information added");
@@ -180,7 +193,6 @@ public class PlaywrightStandardTest {
 
     public void logOut(){
         page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Open Menu")).click();
-        takeScreenshot("Burger menu is opened",folderPath);
         assertThat(page.locator("[data-test=\"logout-sidebar-link\"]")).isVisible();
         page.locator("[data-test=\"logout-sidebar-link\"]").click();
         test.pass("Successfully logged out");
@@ -189,14 +201,25 @@ public class PlaywrightStandardTest {
     public void lockedOutUserLogin(){
 
         page.locator("[data-test=\"username\"]").click();
-        page.locator("[data-test=\"username\"]").fill(rows.get(1).get("username"));
+        page.locator("[data-test=\"username\"]").fill(config.getProperty("locked_username"));
         page.locator("[data-test=\"password\"]").click();
-        page.locator("[data-test=\"password\"]").fill(rows.get(1).get("password"));
+        page.locator("[data-test=\"password\"]").fill(config.getProperty("locked_password"));
         page.locator("[data-test=\"login-button\"]").click();
         page.locator("[data-test=\"error\"]").first().innerText();
         System.out.println(page.locator("[data-test=\"error\"]").first().innerText());
         takeScreenshot("User Login Error Message Displayed",folderPath);
+        test.pass("User Login Error Message Displayed");
+    }
+    public void incorrectUserLogin(){
 
+        page.locator("[data-test=\"username\"]").click();
+        page.locator("[data-test=\"username\"]").fill(config.getProperty("incorrect_username"));
+        page.locator("[data-test=\"password\"]").click();
+        page.locator("[data-test=\"password\"]").fill(config.getProperty("incorrect_password"));
+        page.locator("[data-test=\"login-button\"]").click();
+        page.locator("[data-test=\"error\"]").first().innerText();
+        System.out.println(page.locator("[data-test=\"error\"]").first().innerText());
+        takeScreenshot("User Login Error Message Displayed",folderPath);
         test.pass("User Login Error Message Displayed");
     }
 
@@ -231,45 +254,45 @@ public class PlaywrightStandardTest {
     public void checkOutFormFirstNameValidation(){
 
         page.locator("[data-test=\"lastName\"]").click();
-        page.locator("[data-test=\"lastName\"]").fill("Smith");
+        page.locator("[data-test=\"lastName\"]").fill(rows.get(0).get("lastName"));
         page.locator("[data-test=\"postalCode\"]").click();
-        page.locator("[data-test=\"postalCode\"]").fill("2001");
+        page.locator("[data-test=\"postalCode\"]").fill(rows.get(0).get("zipCode"));
         page.locator("[data-test=\"continue\"]").click();
         assertThat(page.locator("[data-test=\"error\"]")).containsText("Error: First Name is required");
-        takeScreenshot("Error: First Name is required",folderPath);
+        takeScreenshot("Error First Name is required",folderPath);
         test.pass("Error: First Name is required");
 
     }
     public void checkOutFormLastNameValidation(){
 
         page.locator("[data-test=\"firstName\"]").click();
-        page.locator("[data-test=\"firstName\"]").fill("John");
+        page.locator("[data-test=\"firstName\"]").fill(rows.get(1).get("firstName"));
         page.locator("[data-test=\"postalCode\"]").click();
-        page.locator("[data-test=\"postalCode\"]").fill("2001");
+        page.locator("[data-test=\"postalCode\"]").fill(rows.get(1).get("zipCode"));
         page.locator("[data-test=\"continue\"]").click();
         assertThat(page.locator("[data-test=\"error\"]")).containsText("Error: Last Name is required");
-        takeScreenshot("Error: Last Name is required",folderPath);
+        takeScreenshot("Error Last Name is required",folderPath);
         test.pass("Error: Last Name is required");
     }
     public void checkOutFormZipCodeValidation(){
 
         page.locator("[data-test=\"firstName\"]").click();
-        page.locator("[data-test=\"firstName\"]").fill("John");
+        page.locator("[data-test=\"firstName\"]").fill(rows.get(2).get("firstName"));
         page.locator("[data-test=\"lastName\"]").click();
-        page.locator("[data-test=\"lastName\"]").fill("Zoe");
+        page.locator("[data-test=\"lastName\"]").fill(rows.get(2).get("lastName"));
         page.locator("[data-test=\"continue\"]").click();
         assertThat(page.locator("[data-test=\"error\"]")).containsText("Error: Postal Code is required");
-        takeScreenshot("Error: Postal Code is required",folderPath);
+        takeScreenshot("Error Postal Code is required",folderPath);
         test.pass("Error: Postal Code is required");
     }
     public void checkOutFormInputValidation(){
 
         page.locator("[data-test=\"firstName\"]").click();
-        page.locator("[data-test=\"firstName\"]").fill("8945452");
+        page.locator("[data-test=\"firstName\"]").fill(rows.get(3).get("firstName"));
         page.locator("[data-test=\"lastName\"]").click();
-        page.locator("[data-test=\"lastName\"]").fill("645484");
+        page.locator("[data-test=\"lastName\"]").fill(rows.get(3).get("lastName"));
         page.locator("[data-test=\"postalCode\"]").click();
-        page.locator("[data-test=\"postalCode\"]").fill("two thousand and one");
+        page.locator("[data-test=\"postalCode\"]").fill(rows.get(3).get("zipCode"));
         assertThat(page.locator("[data-test=\"firstName\"]")).hasValue("8945452");
         assertThat(page.locator("[data-test=\"lastName\"]")).hasValue("645484");
         assertThat(page.locator("[data-test=\"postalCode\"]")).hasValue("two thousand and one");
